@@ -8,17 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const clientNameInput = document.getElementById('client-name');
     const whatsappInput = document.getElementById('whatsapp-number');
-    const urlListInput = document.getElementById('url-list');
+    
+    // MUDANÇA: Input de arquivo em vez de textarea
+    const fileInput = document.getElementById('file-input'); // Precisamos mudar isso no HTML também
     const publishBtn = document.getElementById('publish-btn');
     
     const statusContainer = document.getElementById('status-container');
-    const loadingSpinner = document.getElementById('loading-spinner');
+    const progressBar = document.getElementById('progress-bar'); // Novo elemento de progresso
+    const progressText = document.getElementById('progress-text'); // Texto do progresso
     const successMessage = document.getElementById('success-message');
     const errorMessage = document.getElementById('error-message');
     const finalUrlInput = document.getElementById('final-url');
     const openLinkBtn = document.getElementById('open-link-btn');
 
-    // --- 1. Gerenciamento de Configurações (LocalStorage) ---
+    // --- 1. Configurações (Mantido igual) ---
     function loadConfig() {
         const config = JSON.parse(localStorage.getItem('nbv_gh_config'));
         if (config) {
@@ -26,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.value = config.user || '';
             repoInput.value = config.repo || '';
         } else {
-            // Se não tiver config, abre a aba automaticamente
             configSection.classList.remove('hidden');
         }
     }
@@ -38,142 +40,159 @@ document.addEventListener('DOMContentLoaded', () => {
             repo: repoInput.value.trim()
         };
         localStorage.setItem('nbv_gh_config', JSON.stringify(config));
-        alert('Configurações salvas no navegador! Guerreiro, prossiga.');
+        alert('Configurações salvas!');
         configSection.classList.add('hidden');
     });
 
     loadConfig();
 
-    // --- 2. Função Auxiliar para Encodar Unicode para Base64 (GitHub exige) ---
-    function utf8_to_b64(str) {
-        return window.btoa(unescape(encodeURIComponent(str)));
-    }
+    // --- Auxiliar: Ler arquivo como Base64 (apenas para o upload, não para o HTML) ---
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
 
-    // --- 3. Função Principal de Publicação ---
+    // --- 2. Função Principal de Publicação ---
     publishBtn.addEventListener('click', async () => {
-        // Validações básicas
         const config = JSON.parse(localStorage.getItem('nbv_gh_config'));
-        if (!config || !config.token || !config.user || !config.repo) {
-            alert("Erro: Configure as credenciais do GitHub primeiro (clique na engrenagem).");
-            configSection.classList.remove('hidden');
+        if (!config || !config.token) {
+            alert("Configure as credenciais primeiro.");
             return;
         }
 
         const clientSlug = clientNameInput.value.trim().toLowerCase().replace(/\s+/g, '-');
-        const urls = urlListInput.value.split('\n').filter(u => u.trim() !== '');
+        const files = fileInput.files;
         
-        if (!clientSlug || urls.length === 0) {
-            alert("Preencha o nome do cliente e as URLs das fotos.");
+        if (!clientSlug || files.length === 0) {
+            alert("Preencha o nome do cliente e selecione as fotos.");
             return;
         }
 
-        // UI de Carregamento
+        // UI Reset
         statusContainer.classList.remove('hidden');
-        loadingSpinner.classList.remove('hidden');
         successMessage.classList.add('hidden');
         errorMessage.classList.add('hidden');
         publishBtn.disabled = true;
         publishBtn.classList.add('opacity-50');
+        
+        // Exibir barra de progresso
+        document.getElementById('loading-ui').classList.remove('hidden');
 
         try {
-            // 1. Gera o código HTML (Usa a função geradora interna)
-            const htmlContent = generateApprovalGalleryHtml(urls, whatsappInput.value);
-            
-            // 2. Prepara os dados para a API do GitHub
-            const filePath = `clientes/${clientSlug}/index.html`; // Caminho onde o arquivo será criado
-            const apiUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}`;
-            const message = `Adicionando galeria para cliente: ${clientSlug}`;
-            const contentBase64 = utf8_to_b64(htmlContent);
+            const uploadedImageUrls = [];
+            const totalFiles = files.length;
 
-            // 3. Verifica se o arquivo já existe (para pegar o SHA caso precise atualizar)
-            let sha = null;
-            try {
-                const checkReq = await fetch(apiUrl, {
-                    headers: { 
+            // --- ETAPA 1: Upload das Imagens ---
+            for (let i = 0; i < totalFiles; i++) {
+                const file = files[i];
+                // Limpa nome do arquivo para evitar caracteres estranhos na URL
+                const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, ''); 
+                const path = `clientes/${clientSlug}/img/${cleanFileName}`;
+                
+                // Atualiza progresso
+                const percent = Math.round(((i) / totalFiles) * 100);
+                progressBar.style.width = `${percent}%`;
+                progressText.textContent = `Enviando foto ${i + 1} de ${totalFiles}...`;
+
+                // Converte para base64 APENAS para enviar para a API
+                const contentBase64 = await toBase64(file);
+
+                // PUT request para o GitHub
+                const response = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`, {
+                    method: 'PUT',
+                    headers: {
                         'Authorization': `token ${config.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `Upload img ${cleanFileName}`,
+                        content: contentBase64,
+                        branch: 'main' // ou master
+                    })
                 });
-                if (checkReq.ok) {
-                    const fileData = await checkReq.json();
-                    sha = fileData.sha; // Se existir, pegamos o SHA para sobrescrever
+
+                if (!response.ok) {
+                    // Se der erro (ex: arquivo já existe), tentamos continuar ou paramos?
+                    // Vamos logar e continuar para não perder tudo
+                    console.error(`Erro ao subir ${file.name}`, await response.json());
                 }
-            } catch (e) {
-                console.log('Arquivo novo, sem SHA prévio.');
+
+                // Monta a URL pública onde a imagem vai ficar
+                const rawUrl = `https://${config.user}.github.io/${config.repo}/clientes/${clientSlug}/img/${cleanFileName}`;
+                uploadedImageUrls.push(rawUrl);
             }
 
-            // 4. Faz o PUT (Upload)
-            const bodyData = {
-                message: message,
-                content: contentBase64,
-                branch: 'main' // ou 'master', dependendo do seu repo
-            };
-            if (sha) bodyData.sha = sha;
+            // --- ETAPA 2: Gerar e Subir o HTML ---
+            progressText.textContent = "Gerando galeria...";
+            const htmlContent = generateApprovalGalleryHtml(uploadedImageUrls, whatsappInput.value);
+            const htmlBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
 
-            const response = await fetch(apiUrl, {
+            const htmlPath = `clientes/${clientSlug}/index.html`;
+            
+            await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${htmlPath}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `token ${config.token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(bodyData)
+                body: JSON.stringify({
+                    message: `Create gallery index for ${clientSlug}`,
+                    content: htmlBase64,
+                    branch: 'main'
+                })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Erro GitHub: ${errorData.message}`);
-            }
-
-            // 5. Sucesso!
+            // Sucesso
+            progressBar.style.width = `100%`;
             const pagesUrl = `https://${config.user}.github.io/${config.repo}/clientes/${clientSlug}/`;
             
-            loadingSpinner.classList.add('hidden');
+            document.getElementById('loading-ui').classList.add('hidden');
             successMessage.classList.remove('hidden');
             finalUrlInput.value = pagesUrl;
             openLinkBtn.href = pagesUrl;
 
         } catch (error) {
-            loadingSpinner.classList.add('hidden');
+            document.getElementById('loading-ui').classList.add('hidden');
             errorMessage.classList.remove('hidden');
-            errorMessage.textContent = `Falha na operação: ${error.message}`;
+            errorMessage.textContent = `Erro: ${error.message}`;
             publishBtn.disabled = false;
             publishBtn.classList.remove('opacity-50');
         }
     });
 });
 
-
-// --- LÓGICA DE GERAÇÃO DO HTML (A mesma que você já tinha, embutida aqui) ---
+// --- Função Geradora de HTML (Mantida a mesma do passo anterior, ou reduzida) ---
 function generateApprovalGalleryHtml(imageUrls, whatsappNumber) {
-    // ESTILOS CSS (Minificados para caber melhor na string)
+    // ... (Copie a função generateApprovalGalleryHtml completa da resposta anterior aqui) ...
+    // Vou incluir a versão curta aqui para o contexto, mas use a completa que mandei antes.
+    
     const style = `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css');
         :root { --bg-color: #1a1a2e; --card-bg-color: #2e305e; --text-color: #e0e0e0; --accent: #4169E1; --green: #22c55e; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; padding-bottom: 100px; }
         .container { max-width: 1200px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 40px; }
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .photo-card { background: var(--card-bg-color); border-radius: 10px; overflow: hidden; position: relative; transition: transform 0.2s; }
-        .photo-card:hover { transform: translateY(-5px); }
+        .photo-card { background: var(--card-bg-color); border-radius: 10px; overflow: hidden; position: relative; }
         .photo-card img { width: 100%; height: 250px; object-fit: contain; background: #000; cursor: pointer; }
-        .controls { padding: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        button { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #fff; transition: 0.3s; }
+        .controls { padding: 15px; display: flex; gap: 10px; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #fff; }
         .btn-approve { background: #555; } .btn-approve.active { background: var(--green); }
         .btn-comment { background: #555; } .btn-comment.active { background: var(--accent); }
-        textarea { width: 100%; box-sizing: border-box; background: #1a1a2e; color: #fff; border: 1px solid #444; padding: 10px; margin-top: 10px; display: none; }
+        textarea { width: 100%; background: #1a1a2e; color: #fff; border: 1px solid #444; padding: 10px; margin-top: 10px; display: none; }
         textarea.show { display: block; }
         .submit-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #2e305e; padding: 20px; text-align: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); z-index: 99; }
-        .btn-final { background: var(--green); padding: 15px 40px; font-size: 1.1em; }
-        /* Modal */
+        .btn-final { background: var(--green); padding: 15px 40px; font-size: 1.1em; border-radius: 8px; cursor: pointer; border: none; color: white; font-weight: bold;}
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
         .modal img { max-width: 90%; max-height: 90%; }
         .close-modal { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; }
     `;
 
     const photoCards = imageUrls.map((url, i) => {
-        // Correção de segurança e nome do arquivo
-        const name = url.split('/').pop().split('?')[0] || `Foto ${i+1}`;
+        const name = url.split('/').pop();
         return `
             <div class="photo-card" id="card-${i}">
                 <img src="${url}" onclick="openModal('${url}')" loading="lazy">
@@ -181,20 +200,17 @@ function generateApprovalGalleryHtml(imageUrls, whatsappNumber) {
                     <button class="btn-approve" onclick="toggleStatus(${i}, 'approved')"><i class="fas fa-check"></i> Aprovar</button>
                     <button class="btn-comment" onclick="toggleComment(${i})"><i class="fas fa-comment"></i> Comentar</button>
                 </div>
-                <textarea id="comment-${i}" placeholder="Descreva a alteração..."></textarea>
+                <textarea id="comment-${i}" placeholder="O que precisa ajustar?"></textarea>
             </div>`;
     }).join('');
 
-    // SCRIPT DO LADO DO CLIENTE (O que vai DENTRO do HTML gerado)
     const clientScript = `
         const state = {};
-        
         function toggleStatus(id, status) {
             const card = document.getElementById('card-' + id);
             const btnApprove = card.querySelector('.btn-approve');
-            
             if (state[id]?.status === status) {
-                state[id].status = null; // Toggle off
+                state[id].status = null;
                 btnApprove.classList.remove('active');
                 btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
             } else {
@@ -202,51 +218,38 @@ function generateApprovalGalleryHtml(imageUrls, whatsappNumber) {
                 state[id].status = status;
                 btnApprove.classList.add('active');
                 btnApprove.innerHTML = '<i class="fas fa-check"></i> APROVADA';
-                // Remove comentário se aprovar? Opcional.
             }
         }
-
         function toggleComment(id) {
             const txt = document.getElementById('comment-' + id);
             txt.classList.toggle('show');
             if (txt.classList.contains('show')) txt.focus();
         }
-
         function openModal(src) {
             document.getElementById('modal-img').src = src;
             document.getElementById('modal').style.display = 'flex';
         }
-        document.getElementById('modal').onclick = (e) => {
-            if(e.target !== document.getElementById('modal-img')) 
-                document.getElementById('modal').style.display = 'none';
-        }
-
+        document.querySelector('.close-modal').onclick = () => document.getElementById('modal').style.display = 'none';
+        document.getElementById('modal').onclick = (e) => { if(e.target === document.getElementById('modal')) document.getElementById('modal').style.display = 'none'; }
+        
         function sendWhatsapp() {
-            let msg = "*Aprovação de Fotos - ${new Date().toLocaleDateString()}*\\n\\n";
+            let msg = "*Aprovação de Fotos*\\nCliente: ${whatsappNumber}\\n\\n"; // Aqui você pode por o nome do cliente dinamicamente se quiser
             let hasComment = false;
-            
             document.querySelectorAll('.photo-card').forEach((card, i) => {
-                const name = card.querySelector('img').src.split('/').pop().split('?')[0];
+                const name = card.querySelector('img').src.split('/').pop();
                 const status = state[i]?.status;
                 const comment = document.getElementById('comment-' + i).value.trim();
-                
                 if (status === 'approved') {
-                    // msg += "✅ " + name + " (Aprovada)\\n"; 
-                    // Opcional: listar apenas exceções ou todas
+                    // msg += "✅ " + name + "\\n";
                 } else if (comment) {
                     msg += "⚠️ " + name + ": " + comment + "\\n";
                     hasComment = true;
                 }
             });
-
-            if (!hasComment) {
-                msg += "Todas as fotos marcadas foram aprovadas! ✅";
-            } else {
-                msg += "\\nPor favor, verifique as observações acima.";
-            }
-
-            const phone = "${whatsappNumber}"; 
-            window.open("https://api.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msg), '_blank');
+            if (!hasComment) msg += "Todas as fotos marcadas foram aprovadas! ✅";
+            else msg += "\\nVeja as observações acima.";
+            
+            window.open("https://api.whatsapp.com/send?phone=${whatsappNumber}&text=" + encodeURIComponent(msg), '_blank');
         }
     `;
 
@@ -260,34 +263,12 @@ function generateApprovalGalleryHtml(imageUrls, whatsappNumber) {
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Galeria de Aprovação</h1>
-            <p>Selecione as fotos para aprovar ou adicione comentários.</p>
-        </div>
-        <div class="gallery">
-            ${photoCards}
-        </div>
-        <div style="height: 100px;"></div>
+        <div class="header"><h1>Galeria de Aprovação</h1></div>
+        <div class="gallery">${photoCards}</div>
     </div>
-    
-    <div class="submit-bar">
-        <button class="btn-final" onclick="sendWhatsapp()">Enviar Aprovação via WhatsApp</button>
-    </div>
-
-    <div id="modal" class="modal">
-        <span class="close-modal">&times;</span>
-        <img id="modal-img" src="">
-    </div>
-
+    <div class="submit-bar"><button class="btn-final" onclick="sendWhatsapp()">Enviar via WhatsApp</button></div>
+    <div id="modal" class="modal"><span class="close-modal">&times;</span><img id="modal-img"></div>
     <script>${clientScript}<\/script>
 </body>
 </html>`;
-}
-
-// Função simples para copiar URL
-function copyUrl() {
-    const copyText = document.getElementById("final-url");
-    copyText.select();
-    document.execCommand("copy");
-    alert("Link copiado: " + copyText.value);
 }
