@@ -1,30 +1,356 @@
-// --- NOVO GERADOR DO HTML DO CLIENTE (TEMPLATE) ---
-function generateClientHtml(urls, whatsapp, clientName) {
-    // Cria os cards de imagem
-    const cards = urls.map((url, i) => {
-        const name = url.split('/').pop();
-        return `
-        <div class="photo-card" id="card-${i}">
-            <div class="img-wrapper" onclick="openModal('${url}')">
-                <img src="${url}" loading="lazy" alt="Foto">
-                <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio NBV - Painel Gerador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
+        .drag-active { @apply border-blue-500 bg-blue-50; }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .loading-shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #eff6ff 4%, #dbeafe 25%, #eff6ff 36%);
+            background-size: 1000px 100%;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+
+    <header class="bg-slate-900 text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white"><i class="fas fa-camera-retro mr-2"></i>Studio NBV Admin</h1>
+                <p class="text-slate-400 text-xs">Gerador de Galerias de Aprovação v2.1</p>
             </div>
-            <div class="card-body">
-                <div class="filename">${name}</div>
-                <div class="actions">
-                    <button class="btn btn-approve" onclick="toggleStatus(${i}, 'approved')">
-                        <i class="fas fa-check"></i> Aprovar
-                    </button>
-                    <button class="btn btn-comment" onclick="toggleComment(${i})">
-                        <i class="fas fa-edit"></i> Solicitar Alteração
+            <button onclick="toggleConfig()" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded transition flex items-center gap-2">
+                <i class="fas fa-cog"></i> Configurar GitHub
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto p-4 max-w-3xl">
+
+        <div id="config-section" class="hidden bg-white rounded-lg shadow-xl p-6 mb-6 border-l-4 border-blue-600">
+            <h2 class="text-lg font-bold mb-4 text-gray-800">⚙️ Credenciais do GitHub</h2>
+            <p class="text-sm text-gray-500 mb-4">Seus dados ficam salvos apenas neste navegador.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Personal Access Token (Clássico)</label>
+                    <input type="password" id="gh-token" class="w-full p-2 border rounded bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ghp_...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Usuário GitHub</label>
+                        <input type="text" id="gh-user" class="w-full p-2 border rounded bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: thiagohfotografia">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Repositório</label>
+                        <input type="text" id="gh-repo" class="w-full p-2 border rounded bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: aprovacao-fotos">
+                    </div>
+                </div>
+                <button onclick="saveConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full transition">Salvar Configurações</button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Nova Galeria</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Nome do Cliente (Para o Link)</label>
+                    <input type="text" id="client-name" placeholder="ex: casamento-maria-joao" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    <p class="text-xs text-gray-500 mt-1">Evite acentos e espaços.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">WhatsApp do Cliente</label>
+                    <input type="tel" id="whatsapp-number" value="5542998370150" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Fotos (JPG/PNG - Recomendado Reduzidas)</label>
+                
+                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition cursor-pointer relative">
+                    <input type="file" id="file-input" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    
+                    <div class="pointer-events-none">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-400 mb-3"></i>
+                        <p class="text-gray-600 font-medium">Clique ou arraste as fotos aqui</p>
+                        <p class="text-xs text-gray-400 mt-1" id="file-count-label">Nenhum arquivo selecionado</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="publish-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:scale-[1.01] flex justify-center items-center gap-2 text-lg">
+                <i class="fas fa-rocket"></i> Gerar e Publicar Galeria
+            </button>
+        </div>
+
+        <div id="status-container" class="hidden mt-6 bg-white rounded-xl shadow-lg p-6 text-center">
+            
+            <div id="loading-ui">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-blue-600 font-bold text-lg" id="progress-text">Iniciando...</span>
+                    <span class="text-gray-400 text-sm" id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-300 loading-shimmer" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Não feche a página enquanto carregamos as fotos.</p>
+            </div>
+
+            <div id="success-message" class="hidden">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                    <i class="fas fa-check text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Sucesso, Guerreiro!</h3>
+                <p class="text-gray-600 mb-6">A galeria foi criada e já está online.</p>
+                
+                <div class="flex flex-col sm:flex-row gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <input type="text" id="final-url" readonly class="bg-transparent w-full text-blue-600 font-mono text-sm outline-none">
+                    <button onclick="copyUrl()" class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-4 py-2 rounded font-bold text-sm shadow-sm transition">Copiar</button>
+                </div>
+
+                <div class="mt-6 flex gap-3 justify-center">
+                    <a id="open-link-btn" href="#" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow transition flex items-center gap-2">
+                        <i class="fas fa-external-link-alt"></i> Ver Galeria
+                    </a>
+                    <button onclick="location.reload()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition">
+                        Novo Cliente
                     </button>
                 </div>
-                <textarea id="comment-${i}" class="comment-box" placeholder="Descreva o ajuste necessário..."></textarea>
             </div>
-        </div>`;
-    }).join('');
 
-    return `<!DOCTYPE html>
+            <div id="error-message" class="hidden bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 mt-4 text-left">
+                <p class="font-bold"><i class="fas fa-exclamation-triangle"></i> Ocorreu um erro:</p>
+                <p id="error-text" class="text-sm mt-1"></p>
+                <button onclick="location.reload()" class="mt-3 text-sm underline">Tentar novamente</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- CONFIGURAÇÃO E UI ---
+        const configSection = document.getElementById('config-section');
+        const fileInput = document.getElementById('file-input');
+        const fileCountLabel = document.getElementById('file-count-label');
+        const dropZone = document.getElementById('drop-zone');
+        const publishBtn = document.getElementById('publish-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const progressPercent = document.getElementById('progress-percent');
+        
+        // Toggle Config
+        function toggleConfig() { configSection.classList.toggle('hidden'); }
+
+        // Carregar Config
+        function loadConfig() {
+            const config = JSON.parse(localStorage.getItem('nbv_gh_config'));
+            if (config) {
+                document.getElementById('gh-token').value = config.token || '';
+                document.getElementById('gh-user').value = config.user || '';
+                document.getElementById('gh-repo').value = config.repo || '';
+            } else {
+                configSection.classList.remove('hidden');
+            }
+        }
+        
+        // Salvar Config
+        function saveConfig() {
+            const config = {
+                token: document.getElementById('gh-token').value.trim(),
+                user: document.getElementById('gh-user').value.trim(),
+                repo: document.getElementById('gh-repo').value.trim()
+            };
+            localStorage.setItem('nbv_gh_config', JSON.stringify(config));
+            alert('Configurações salvas! Pode fechar a aba de configs.');
+            configSection.classList.add('hidden');
+        }
+
+        // UI de Arquivo
+        fileInput.addEventListener('change', () => {
+            const count = fileInput.files.length;
+            fileCountLabel.textContent = count > 0 ? `${count} fotos selecionadas` : 'Nenhum arquivo selecionado';
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        });
+
+        // Load inicial
+        loadConfig();
+
+        // --- LÓGICA DE UPLOAD ---
+        
+        // Converter arquivo para Base64 (sem o prefixo data:image/...)
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+        });
+
+        // Função Principal
+        publishBtn.addEventListener('click', async () => {
+            const config = JSON.parse(localStorage.getItem('nbv_gh_config'));
+            if (!config || !config.token) { alert("Configure o GitHub primeiro!"); toggleConfig(); return; }
+
+            const clientName = document.getElementById('client-name').value.trim();
+            const whatsapp = document.getElementById('whatsapp-number').value.trim();
+            const files = fileInput.files;
+
+            if (!clientName || files.length === 0) {
+                alert("Preencha o nome do cliente e selecione as fotos.");
+                return;
+            }
+
+            // Normaliza o slug do cliente (remove acentos e espaços)
+            const clientSlug = clientName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+            // Prepara UI
+            document.getElementById('status-container').classList.remove('hidden');
+            document.getElementById('loading-ui').classList.remove('hidden');
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+            publishBtn.disabled = true;
+            publishBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const uploadedImageUrls = [];
+                const totalFiles = files.length;
+
+                // 1. Upload das Imagens (Uma por uma para não travar)
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = files[i];
+                    // Nome limpo para o arquivo
+                    const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '');
+                    const path = `clientes/${clientSlug}/img/${cleanFileName}`;
+                    
+                    // Atualiza Barra
+                    const percent = Math.round(((i) / totalFiles) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    progressText.textContent = `Enviando: ${cleanFileName}`;
+                    progressPercent.textContent = `${percent}%`;
+
+                    // Upload API
+                    const contentBase64 = await toBase64(file);
+                    
+                    await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${config.token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: `Upload ${cleanFileName}`,
+                            content: contentBase64,
+                            branch: 'main' // ou 'master' verifique seu repo
+                        })
+                    });
+
+                    // Guarda a URL pública
+                    uploadedImageUrls.push(`https://${config.user}.github.io/${config.repo}/clientes/${clientSlug}/img/${cleanFileName}`);
+                }
+
+                // 2. Gerar HTML do Cliente
+                progressText.textContent = "Criando Galeria...";
+                progressBar.style.width = `95%`;
+                
+                const clientHtml = generateClientHtml(uploadedImageUrls, whatsapp, clientName);
+                // Codifica HTML para Base64 (suporte a UTF-8)
+                const htmlBase64 = window.btoa(unescape(encodeURIComponent(clientHtml)));
+
+                const indexPath = `clientes/${clientSlug}/index.html`;
+
+                // Tenta pegar o SHA se o arquivo já existir (para atualizar)
+                let sha = null;
+                try {
+                    const check = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${indexPath}`, {
+                        headers: { 'Authorization': `token ${config.token}` } 
+                    });
+                    if (check.ok) { const data = await check.json(); sha = data.sha; }
+                } catch(e) {}
+
+                // Upload do index.html
+                const body = {
+                    message: `Galeria Cliente: ${clientName}`,
+                    content: htmlBase64,
+                    branch: 'main'
+                };
+                if (sha) body.sha = sha;
+
+                const resp = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${indexPath}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if(!resp.ok) throw new Error("Falha ao criar o arquivo HTML final.");
+
+                // 3. Finalização
+                progressBar.style.width = `100%`;
+                const finalUrl = `https://${config.user}.github.io/${config.repo}/clientes/${clientSlug}/`;
+                
+                setTimeout(() => {
+                    document.getElementById('loading-ui').classList.add('hidden');
+                    document.getElementById('success-message').classList.remove('hidden');
+                    document.getElementById('final-url').value = finalUrl;
+                    document.getElementById('open-link-btn').href = finalUrl;
+                }, 1000);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading-ui').classList.add('hidden');
+                document.getElementById('error-message').classList.remove('hidden');
+                document.getElementById('error-text').textContent = error.message;
+                publishBtn.disabled = false;
+                publishBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        function copyUrl() {
+            const copyText = document.getElementById("final-url");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Link copiado!");
+        }
+
+        // --- GERADOR DO HTML DO CLIENTE (TEMPLATE ATUALIZADO) ---
+        function generateClientHtml(urls, whatsapp, clientName) {
+            // Cria os cards de imagem
+            const cards = urls.map((url, i) => {
+                const name = url.split('/').pop();
+                return `
+                <div class="photo-card" id="card-${i}">
+                    <div class="img-wrapper" onclick="openModal('${url}')">
+                        <img src="${url}" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">${name}</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(${i}, 'approved')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleComment(${i})">
+                                <i class="fas fa-edit"></i> Solicitar Alteração
+                            </button>
+                        </div>
+                        <textarea id="comment-${i}" class="comment-box" placeholder="Descreva o ajuste necessário..."></textarea>
+                    </div>
+                </div>`;
+            }).join('');
+
+            return `<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -226,4 +552,7 @@ function generateClientHtml(urls, whatsapp, clientName) {
     <\/script>
 </body>
 </html>`;
-}
+        }
+    </script>
+</body>
+</html>
