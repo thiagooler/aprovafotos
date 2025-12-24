@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Galeria - Francisca</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --success: #22c55e; --dark: #1e293b; --bg: #f1f5f9; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); padding-bottom: 100px; }
+        .header { background: #fff; padding: 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 20; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        
+        .photo-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .img-wrapper { height: 250px; background: #000; position: relative; cursor: pointer; }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .card-body { padding: 15px; }
+        .filename { font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .actions { display: flex; gap: 8px; }
+        .btn { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; background: #f1f5f9; color: #64748b; }
+        
+        /* ESTADOS DOS BOTÕES */
+        .btn-approve.active { background: var(--success) !important; color: #fff !important; }
+        .btn-comment.active { background: var(--primary) !important; color: #fff !important; }
+
+        .comment-area { display: none; margin-top: 10px; }
+        .comment-area.show { display: block; }
+        .comment-box { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 80px; resize: vertical; }
+
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 30; display: flex; justify-content: center; }
+        .btn-send { background: #25D366; color: #fff; border: none; padding: 12px 35px; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; justify-content: center; align-items: center; }
+        .modal.open { display: flex; }
+        .modal img { max-width: 95vw; max-height: 95vh; object-fit: contain; }
+        .close-modal { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 40px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Francisca</h1>
+        <p>Toque para Aprovar ou Alterar</p>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+                <div class="photo-card" id="card-0">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1294.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1294.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1294.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(0, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(0, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-0">
+                            <textarea id="comment-0" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(0)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-1">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1297.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1297.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1297.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(1, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(1, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-1">
+                            <textarea id="comment-1" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(1)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-2">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1300.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1300.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1300.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(2, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(2, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-2">
+                            <textarea id="comment-2" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(2)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-3">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1301.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1301.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1301.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(3, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(3, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-3">
+                            <textarea id="comment-3" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(3)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-4">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1302.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1302.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1302.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(4, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(4, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-4">
+                            <textarea id="comment-4" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(4)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-5">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1305.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1305.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1305.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(5, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(5, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-5">
+                            <textarea id="comment-5" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(5)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-6">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1630.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1630.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1630.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(6, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(6, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-6">
+                            <textarea id="comment-6" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(6)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-7">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1730.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1730.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1730.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(7, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(7, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-7">
+                            <textarea id="comment-7" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(7)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-8">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1731.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-1731.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1731.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(8, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(8, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-8">
+                            <textarea id="comment-8" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(8)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-9">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-2014.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-2014.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2014.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(9, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(9, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-9">
+                            <textarea id="comment-9" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(9)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-10">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-2016.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-2016.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2016.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(10, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(10, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-10">
+                            <textarea id="comment-10" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(10)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-11">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-2031.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/francisca/img/foto-2031.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2031.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(11, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(11, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-11">
+                            <textarea id="comment-11" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(11)"></textarea>
+                        </div>
+                    </div>
+                </div></div>
+    </div>
+
+    <div class="footer-bar">
+        <button class="btn-send" onclick="sendWhatsapp()">
+            <i class="fab fa-whatsapp"></i> Enviar Escolhas no WhatsApp
+        </button>
+    </div>
+
+    <div id="modal" class="modal" onclick="if(event.target === this) this.classList.remove('open')">
+        <span class="close-modal" onclick="document.getElementById('modal').classList.remove('open')">&times;</span>
+        <img id="modal-img" src="">
+    </div>
+
+    <script>
+        const state = {};
+
+        function toggleStatus(id, action) {
+            if (!state[id]) state[id] = {};
+            
+            const card = document.getElementById('card-' + id);
+            const btnApprove = card.querySelector('.btn-approve');
+            const btnComment = card.querySelector('.btn-comment');
+            const commentArea = document.getElementById('comment-area-' + id);
+            const textarea = document.getElementById('comment-' + id);
+
+            // Se clicou em APROVAR
+            if (action === 'approve') {
+                // Se já estava aprovado, desmarca
+                if (state[id].status === 'approved') {
+                    state[id].status = null;
+                    btnApprove.classList.remove('active');
+                    btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
+                } else {
+                    // Marca como aprovado
+                    state[id].status = 'approved';
+                    btnApprove.classList.add('active');
+                    btnApprove.innerHTML = '<i class="fas fa-check"></i> APROVADA';
+                    
+                    // Limpa comentários
+                    btnComment.classList.remove('active');
+                    commentArea.classList.remove('show');
+                    textarea.value = '';
+                }
+            }
+            
+            // Se clicou em ALTERAR (abrir caixa de texto)
+            if (action === 'comment') {
+                commentArea.classList.toggle('show');
+                if (commentArea.classList.contains('show')) {
+                    textarea.focus();
+                    // Se abriu comentário, remove aprovação
+                    state[id].status = null; // Fica pendente até digitar
+                    btnApprove.classList.remove('active');
+                    btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
+                } else {
+                    // Se fechou sem digitar nada
+                    if(!textarea.value.trim()) btnComment.classList.remove('active');
+                }
+            }
+        }
+
+        // Verifica se digitou algo para marcar o botão "Alterar" como ativo
+        function checkComment(id) {
+            const val = document.getElementById('comment-' + id).value.trim();
+            const card = document.getElementById('card-' + id);
+            const btnComment = card.querySelector('.btn-comment');
+            const btnApprove = card.querySelector('.btn-approve');
+
+            if (val.length > 0) {
+                state[id] = { status: 'alteration' };
+                btnComment.classList.add('active');
+                
+                // Garante que aprovação está desligada
+                btnApprove.classList.remove('active');
+                btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
+            } else {
+                state[id] = { status: null };
+                btnComment.classList.remove('active');
+            }
+        }
+
+        function openModal(src) {
+            document.getElementById('modal-img').src = src;
+            document.getElementById('modal').classList.add('open');
+        }
+
+        function sendWhatsapp() {
+            let msg = "*Seleção de Fotos - Francisca*\n\n";
+            let approved = 0;
+            let changes = "";
+            let hasChange = false;
+
+            document.querySelectorAll('.photo-card').forEach((card, i) => {
+                const name = card.querySelector('.filename').textContent;
+                const status = state[i]?.status;
+                const comment = document.getElementById('comment-' + i).value.trim();
+
+                if (status === 'approved') {
+                    approved++;
+                } else if (comment) {
+                    changes += "⚠️ *" + name + "*: " + comment + "\n";
+                    hasChange = true;
+                }
+            });
+
+            msg += "✅ Aprovadas: " + approved + " fotos\n";
+
+            if (hasChange) {
+                msg += "\n📝 *ALTERAÇÕES:*\n" + changes;
+                msg += "\nPor favor, aguardo o retorno sobre as alterações.";
+            } else {
+                msg += "\n✅ Nenhuma alteração solicitada. Pode finalizar!";
+            }
+
+            window.open("https://api.whatsapp.com/send?phone=5542998370150&text=" + encodeURIComponent(msg), '_blank');
+        }
+    </script>
+</body>
+</html>
