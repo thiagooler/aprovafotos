@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Galeria - Atilson</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --success: #22c55e; --dark: #1e293b; --bg: #f1f5f9; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); padding-bottom: 100px; }
+        .header { background: #fff; padding: 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 20; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        
+        .photo-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .img-wrapper { height: 250px; background: #000; position: relative; cursor: pointer; }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .card-body { padding: 15px; }
+        .filename { font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .actions { display: flex; gap: 8px; }
+        .btn { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; background: #f1f5f9; color: #64748b; }
+        
+        /* ESTADOS DOS BOTÕES */
+        .btn-approve.active { background: var(--success) !important; color: #fff !important; }
+        .btn-comment.active { background: var(--primary) !important; color: #fff !important; }
+
+        .comment-area { display: none; margin-top: 10px; }
+        .comment-area.show { display: block; }
+        .comment-box { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 80px; resize: vertical; }
+
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 30; display: flex; justify-content: center; }
+        .btn-send { background: #25D366; color: #fff; border: none; padding: 12px 35px; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; justify-content: center; align-items: center; }
+        .modal.open { display: flex; }
+        .modal img { max-width: 95vw; max-height: 95vh; object-fit: contain; }
+        .close-modal { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 40px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Atilson</h1>
+        <p>Toque para Aprovar ou Alterar</p>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+                <div class="photo-card" id="card-0">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1020.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1020.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1020.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(0, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(0, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-0">
+                            <textarea id="comment-0" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(0)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-1">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1043.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1043.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1043.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(1, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(1, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-1">
+                            <textarea id="comment-1" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(1)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-2">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1050.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1050.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1050.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(2, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(2, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-2">
+                            <textarea id="comment-2" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(2)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-3">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1072.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1072.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1072.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(3, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(3, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-3">
+                            <textarea id="comment-3" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(3)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-4">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1105.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1105.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1105.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(4, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(4, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-4">
+                            <textarea id="comment-4" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(4)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-5">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1150.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1150.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1150.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(5, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(5, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-5">
+                            <textarea id="comment-5" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(5)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-6">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1235.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1235.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1235.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(6, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(6, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-6">
+                            <textarea id="comment-6" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(6)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-7">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1252.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1252.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1252.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(7, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(7, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-7">
+                            <textarea id="comment-7" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(7)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-8">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1386.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1386.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1386.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(8, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(8, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-8">
+                            <textarea id="comment-8" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(8)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-9">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1393.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1393.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1393.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(9, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(9, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-9">
+                            <textarea id="comment-9" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(9)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-10">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1401.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1401.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1401.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(10, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(10, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-10">
+                            <textarea id="comment-10" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(10)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-11">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1460.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1460.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1460.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(11, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(11, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-11">
+                            <textarea id="comment-11" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(11)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-12">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1469.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1469.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1469.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(12, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(12, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-12">
+                            <textarea id="comment-12" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(12)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-13">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1479.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1479.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1479.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(13, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(13, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-13">
+                            <textarea id="comment-13" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(13)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-14">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1501.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1501.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1501.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(14, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(14, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-14">
+                            <textarea id="comment-14" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(14)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-15">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1507.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1507.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1507.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(15, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(15, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-15">
+                            <textarea id="comment-15" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(15)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-16">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1513.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1513.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1513.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(16, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(16, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-16">
+                            <textarea id="comment-16" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(16)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-17">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1522.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1522.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1522.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(17, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(17, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-17">
+                            <textarea id="comment-17" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(17)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-18">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1553.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1553.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1553.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(18, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(18, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-18">
+                            <textarea id="comment-18" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(18)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-19">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1603.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1603.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1603.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(19, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(19, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-19">
+                            <textarea id="comment-19" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(19)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-20">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1630.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1630.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1630.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(20, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(20, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-20">
+                            <textarea id="comment-20" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(20)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-21">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1649.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1649.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1649.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(21, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(21, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-21">
+                            <textarea id="comment-21" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(21)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-22">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1699.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1699.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1699.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(22, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(22, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-22">
+                            <textarea id="comment-22" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(22)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-23">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1707.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1707.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1707.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(23, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(23, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-23">
+                            <textarea id="comment-23" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(23)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-24">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1779.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1779.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1779.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(24, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(24, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-24">
+                            <textarea id="comment-24" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(24)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-25">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1813.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1813.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1813.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(25, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(25, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-25">
+                            <textarea id="comment-25" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(25)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-26">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1896.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1896.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1896.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(26, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(26, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-26">
+                            <textarea id="comment-26" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(26)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-27">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1924.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1924.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1924.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(27, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(27, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-27">
+                            <textarea id="comment-27" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(27)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-28">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1957.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-1957.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-1957.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(28, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(28, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-28">
+                            <textarea id="comment-28" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(28)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-29">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2304.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2304.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2304.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(29, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(29, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-29">
+                            <textarea id="comment-29" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(29)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-30">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2310.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2310.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2310.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(30, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(30, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-30">
+                            <textarea id="comment-30" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(30)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-31">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2356.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2356.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2356.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(31, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(31, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-31">
+                            <textarea id="comment-31" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(31)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-32">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2381.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2381.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2381.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(32, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(32, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-32">
+                            <textarea id="comment-32" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(32)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-33">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2499.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2499.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2499.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(33, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(33, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-33">
+                            <textarea id="comment-33" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(33)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-34">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2950.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-2950.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-2950.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(34, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(34, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-34">
+                            <textarea id="comment-34" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(34)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-35">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-3259.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-3259.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-3259.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(35, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(35, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-35">
+                            <textarea id="comment-35" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(35)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-36">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-3265.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-3265.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-3265.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(36, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(36, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-36">
+                            <textarea id="comment-36" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(36)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="photo-card" id="card-37">
+                    <div class="img-wrapper" onclick="openModal('https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-3364.jpg')">
+                        <img src="https://thiagooler.github.io/aprovafotos/clientes/atilson/img/foto-3364.jpg" loading="lazy" alt="Foto">
+                        <div class="zoom-icon"><i class="fas fa-search-plus"></i></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filename">foto-3364.jpg</div>
+                        <div class="actions">
+                            <button class="btn btn-approve" onclick="toggleStatus(37, 'approve')">
+                                <i class="fas fa-check"></i> Aprovar
+                            </button>
+                            <button class="btn btn-comment" onclick="toggleStatus(37, 'comment')">
+                                <i class="fas fa-edit"></i> Alterar
+                            </button>
+                        </div>
+                        <div class="comment-area" id="comment-area-37">
+                            <textarea id="comment-37" class="comment-box" placeholder="Descreva o ajuste..." oninput="checkComment(37)"></textarea>
+                        </div>
+                    </div>
+                </div></div>
+    </div>
+
+    <div class="footer-bar">
+        <button class="btn-send" onclick="sendWhatsapp()">
+            <i class="fab fa-whatsapp"></i> Enviar Escolhas no WhatsApp
+        </button>
+    </div>
+
+    <div id="modal" class="modal" onclick="if(event.target === this) this.classList.remove('open')">
+        <span class="close-modal" onclick="document.getElementById('modal').classList.remove('open')">&times;</span>
+        <img id="modal-img" src="">
+    </div>
+
+    <script>
+        const state = {};
+
+        function toggleStatus(id, action) {
+            if (!state[id]) state[id] = {};
+            
+            const card = document.getElementById('card-' + id);
+            const btnApprove = card.querySelector('.btn-approve');
+            const btnComment = card.querySelector('.btn-comment');
+            const commentArea = document.getElementById('comment-area-' + id);
+            const textarea = document.getElementById('comment-' + id);
+
+            // Se clicou em APROVAR
+            if (action === 'approve') {
+                // Se já estava aprovado, desmarca
+                if (state[id].status === 'approved') {
+                    state[id].status = null;
+                    btnApprove.classList.remove('active');
+                    btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
+                } else {
+                    // Marca como aprovado
+                    state[id].status = 'approved';
+                    btnApprove.classList.add('active');
+                    btnApprove.innerHTML = '<i class="fas fa-check"></i> APROVADA';
+                    
+                    // Limpa comentários
+                    btnComment.classList.remove('active');
+                    commentArea.classList.remove('show');
+                    textarea.value = '';
+                }
+            }
+            
+            // Se clicou em ALTERAR (abrir caixa de texto)
+            if (action === 'comment') {
+                commentArea.classList.toggle('show');
+                if (commentArea.classList.contains('show')) {
+                    textarea.focus();
+                    // Se abriu comentário, remove aprovação
+                    state[id].status = null; // Fica pendente até digitar
+                    btnApprove.classList.remove('active');
+                    btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
+                } else {
+                    // Se fechou sem digitar nada
+                    if(!textarea.value.trim()) btnComment.classList.remove('active');
+                }
+            }
+        }
+
+        // Verifica se digitou algo para marcar o botão "Alterar" como ativo
+        function checkComment(id) {
+            const val = document.getElementById('comment-' + id).value.trim();
+            const card = document.getElementById('card-' + id);
+            const btnComment = card.querySelector('.btn-comment');
+            const btnApprove = card.querySelector('.btn-approve');
+
+            if (val.length > 0) {
+                state[id] = { status: 'alteration' };
+                btnComment.classList.add('active');
+                
+                // Garante que aprovação está desligada
+                btnApprove.classList.remove('active');
+                btnApprove.innerHTML = '<i class="fas fa-check"></i> Aprovar';
+            } else {
+                state[id] = { status: null };
+                btnComment.classList.remove('active');
+            }
+        }
+
+        function openModal(src) {
+            document.getElementById('modal-img').src = src;
+            document.getElementById('modal').classList.add('open');
+        }
+
+        function sendWhatsapp() {
+            let msg = "*Seleção de Fotos - Atilson*\n\n";
+            let approved = 0;
+            let changes = "";
+            let hasChange = false;
+
+            document.querySelectorAll('.photo-card').forEach((card, i) => {
+                const name = card.querySelector('.filename').textContent;
+                const status = state[i]?.status;
+                const comment = document.getElementById('comment-' + i).value.trim();
+
+                if (status === 'approved') {
+                    approved++;
+                } else if (comment) {
+                    changes += "⚠️ *" + name + "*: " + comment + "\n";
+                    hasChange = true;
+                }
+            });
+
+            msg += "✅ Aprovadas: " + approved + " fotos\n";
+
+            if (hasChange) {
+                msg += "\n📝 *ALTERAÇÕES:*\n" + changes;
+                msg += "\nPor favor, aguardo o retorno sobre as alterações.";
+            } else {
+                msg += "\n✅ Nenhuma alteração solicitada. Pode finalizar!";
+            }
+
+            window.open("https://api.whatsapp.com/send?phone=5542998370150&text=" + encodeURIComponent(msg), '_blank');
+        }
+    </script>
+</body>
+</html>
